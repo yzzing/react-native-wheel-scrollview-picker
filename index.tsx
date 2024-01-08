@@ -8,7 +8,6 @@ import React, {
   Ref,
 } from "react";
 import {
-  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -28,8 +27,6 @@ function isNumeric(str: string | unknown): boolean {
     !isNaN(parseFloat(str))
   ); // ...and ensure strings of whitespace fail
 }
-
-const deviceWidth = Dimensions.get("window").width;
 
 const isViewStyle = (style: ViewProps["style"]): style is ViewStyle => {
   return (
@@ -63,6 +60,11 @@ export type ScrollPickerProps<ItemT extends string | number> = {
   // tried using ComponentType<ScrollViewProps & { ref: React.RefObject<ScrollView> }>
   // but ScrollView component from react-native-gesture=handler is not compatible with this.
   scrollViewComponent?: any;
+
+  // picker의 width
+  containerWidth? : number;
+  // item의 width
+  itemWidth?: number;
 };
 
 export type ScrollPickerHandle = {
@@ -70,7 +72,7 @@ export type ScrollPickerHandle = {
 }
 
 const ScrollPicker: { <ItemT extends string | number>(props: ScrollPickerProps<ItemT> & { ref?: Ref<ScrollPickerHandle> }): ReactNode } = React.forwardRef((propsState, ref) => {
-  const { itemHeight = 30, style, scrollViewComponent, ...props } = propsState;
+  const { itemHeight = 30, itemWidth,containerWidth, style, scrollViewComponent, ...props } = propsState;
   const [initialized, setInitialized] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(
     props.selectedIndex && props.selectedIndex >= 0 ? props.selectedIndex : 0
@@ -143,7 +145,7 @@ const ScrollPicker: { <ItemT extends string | number>(props: ScrollPickerProps<I
     );
 
     return (
-      <View style={[styles.itemWrapper, { height: itemHeight }]} key={index}>
+      <View style={[styles.itemWrapper, { height: itemHeight, width: itemWidth }]} key={index}>
         {item}
       </View>
     );
@@ -215,16 +217,17 @@ const ScrollPicker: { <ItemT extends string | number>(props: ScrollPickerProps<I
   };
 
   const { header, footer } = renderPlaceHolder();
-  const highlightWidth = (isViewStyle(style) ? style.width : 0) || deviceWidth;
+  const highlightWidth = itemWidth
   const highlightColor = props.highlightColor || "#333";
   const highlightBorderWidth =
     props.highlightBorderWidth || StyleSheet.hairlineWidth;
 
   const wrapperStyle: ViewStyle = {
     height: wrapperHeight,
-    flex: 1,
     backgroundColor: props.wrapperBackground || "#fafafa",
     overflow: "hidden",
+    width: containerWidth,
+    alignItems: "center"
   };
 
   const highlightStyle: ViewStyle = {
